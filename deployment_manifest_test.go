@@ -7,16 +7,22 @@ import (
 )
 
 var _ = Describe("CFDeploymentManifest", func() {
-	It("FindNATSMachines in global properties", func() {
+	It("NATS in global properties", func() {
 		manifest := &gogoboshcf.CFDeploymentManifest{
 			Properties: &map[string]interface{}{
 				"nats": map[string]interface{}{
 					"machines": []string{"server1", "server2"},
+					"port":     4444,
+					"username": "nats",
+					"password": "password",
 				},
 				"another": "FIXME",
 			},
 		}
-		machines := manifest.FindNATSMachines()
-		Expect(machines).To(Equal([]string{"server1", "server2"}))
+		nats := manifest.NATS()
+		Expect(nats.MachinesHostnames).To(Equal([]string{"server1", "server2"}))
+		Expect(nats.Port).To(Equal(4444))
+		Expect(nats.Username).To(Equal("nats"))
+		Expect(nats.Password).To(Equal("password"))
 	})
 })
