@@ -20,6 +20,17 @@ type UAA struct {
 	AdminClientSecret string
 }
 
+// CloudController represents the CC domains, admin client credentials
+type CloudController struct {
+	RootDomain        string
+	SystemDomain      string
+	AppDomains        []string
+	APIDomain         string
+	AdminUser         string
+	AdminPassword     string
+	SSLSkipCertVerify bool
+}
+
 // NATS discovers the hostnames/static IPs for the NATS servers
 func (manifest *CFDeploymentManifest) NATS() (nats NATS) {
 	if manifest.Properties == nil {
@@ -75,5 +86,41 @@ func (manifest *CFDeploymentManifest) UAA() (uaa UAA) {
 		uaa.URI = uaaProperties["url"].(string)
 	}
 
+	return
+}
+
+// CloudController discovers the client credentials & domains for the Cloud Controller
+func (manifest *CFDeploymentManifest) CloudController() (cc CloudController) {
+	if manifest.Properties == nil {
+		return
+	}
+	properties := *manifest.Properties
+	if properties["domain"] != nil {
+		cc.RootDomain = properties["domain"].(string)
+	}
+	if properties["system_domain"] != nil {
+		cc.SystemDomain = properties["system_domain"].(string)
+	}
+	if properties["api_domain"] != nil {
+		cc.APIDomain = properties["api_domain"].(string)
+	}
+	if properties["app_domains"] != nil {
+		cc.AppDomains = properties["app_domains"].([]string)
+	}
+
+	if properties["acceptance_tests"] != nil {
+		acceptanceTests := properties["acceptance_tests"].(map[string]interface{})
+		if acceptanceTests["admin_user"] != nil {
+			cc.AdminUser = acceptanceTests["admin_user"].(string)
+			cc.AdminPassword = acceptanceTests["admin_password"].(string)
+		}
+	}
+
+	if properties["ssl"] != nil {
+		ssl := properties["ssl"].(map[string]interface{})
+		if ssl["skip_cert_verify"] != nil {
+			cc.SSLSkipCertVerify = ssl["skip_cert_verify"].(bool)
+		}
+	}
 	return
 }
