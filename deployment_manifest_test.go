@@ -25,4 +25,21 @@ var _ = Describe("CFDeploymentManifest", func() {
 		Expect(nats.Username).To(Equal("nats"))
 		Expect(nats.Password).To(Equal("password"))
 	})
+
+	It("UAA in global properties", func() {
+		manifest := &gogoboshcf.CFDeploymentManifest{
+			Properties: &map[string]interface{}{
+				"uaa": map[string]interface{}{
+					"admin": map[string]interface{}{
+						"client_secret": "admin-secret",
+					},
+					"url": "https://uaa.10.244.0.34.xip.io",
+				},
+			},
+		}
+		uaa := manifest.UAA()
+		Expect(uaa.AdminClientSecret).To(Equal("admin-secret"))
+		Expect(uaa.AdminClientID).To(Equal("admin"))
+		Expect(uaa.URI).To(Equal("https://uaa.10.244.0.34.xip.io"))
+	})
 })

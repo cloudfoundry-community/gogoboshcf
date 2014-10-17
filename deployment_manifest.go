@@ -13,6 +13,13 @@ type NATS struct {
 	Password          string
 }
 
+// UAA represents UAA admin client credentials
+type UAA struct {
+	URI               string
+	AdminClientID     string
+	AdminClientSecret string
+}
+
 // NATS discovers the hostnames/static IPs for the NATS servers
 func (manifest *CFDeploymentManifest) NATS() (nats NATS) {
 	if manifest.Properties == nil {
@@ -37,6 +44,35 @@ func (manifest *CFDeploymentManifest) NATS() (nats NATS) {
 	}
 	if natsProperties["password"] != nil {
 		nats.Password = natsProperties["password"].(string)
+	}
+
+	return
+}
+
+// UAA discovers the admin client credentials for the UAA
+func (manifest *CFDeploymentManifest) UAA() (uaa UAA) {
+	if manifest.Properties == nil {
+		return
+	}
+	properties := *manifest.Properties
+	if properties["uaa"] == nil {
+		return
+	}
+	uaaProperties := properties["uaa"].(map[string]interface{})
+
+	if uaaProperties["admin"] != nil {
+		admin := uaaProperties["admin"].(map[string]interface{})
+		if admin["client_secret"] != nil {
+			uaa.AdminClientSecret = admin["client_secret"].(string)
+		}
+		if admin["client_id"] != nil {
+			uaa.AdminClientID = admin["client_id"].(string)
+		} else {
+			uaa.AdminClientID = "admin"
+		}
+	}
+	if uaaProperties["url"] != nil {
+		uaa.URI = uaaProperties["url"].(string)
 	}
 
 	return
