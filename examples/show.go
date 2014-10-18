@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-community/gogobosh/local"
 	"github.com/cloudfoundry-community/gogobosh/net"
 	"github.com/cloudfoundry-community/gogobosh/utils"
+	"github.com/kr/pretty"
 )
 
 func main() {
@@ -45,7 +46,7 @@ func main() {
 		return
 	}
 	deployment := cfDeployments[0]
-	fmt.Printf("Deployments found %v, selecting %s\n", cfDeployments, deployment)
+	fmt.Printf("%d CF deployments found, selecting %s\n", len(cfDeployments), deployment)
 
 	fmt.Println("Fetching deployment manifest...")
 	manifest, apiResponse := repo.GetDeploymentManifest(deployment.Name)
@@ -53,6 +54,11 @@ func main() {
 		fmt.Println(apiResponse)
 		return
 	}
-	fmt.Printf("Manifest: %#v\n", manifest)
+	if manifest.Name == "" {
+		fmt.Printf("Deployment '%s' did not yet successfully deploy\n", deployment.Name)
+		return
+	}
+	fmt.Printf("Manifest: %# v\n", pretty.Formatter(*manifest))
+
 	// cfManifest := (*manifest).(gogoboshcf.CFDeploymentManifest)
 }
