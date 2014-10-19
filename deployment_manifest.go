@@ -15,7 +15,7 @@ type PropertiesManifest struct {
 	RootDomain       string   `yaml:"domain"`
 	SystemDomain     string   `yaml:"system_domain"`
 	AppDomains       []string `yaml:"app_domains"`
-	SSL              ssl
+	SSL              SSL
 	SyslogAggregator map[string]interface{} `yaml:"syslog_aggregator"`
 }
 
@@ -30,15 +30,17 @@ type NATS struct {
 // UAA represents UAA admin client credentials
 type UAA struct {
 	URI   string `yaml:"url"`
-	Admin clientIDSecret
+	Admin ClientIDSecret
 }
 
-type clientIDSecret struct {
+// ClientIDSecret describes an ID/Secret pair
+type ClientIDSecret struct {
 	ClientID     string `yaml:"client_id"`
 	ClientSecret string `yaml:"client_secret"`
 }
 
-type ssl struct {
+// SSL describes if components should skip SSL certificate verification (due to self-signed certs)
+type SSL struct {
 	SkipCertificateVerify bool `yaml:"skip_cert_verify"`
 }
 
