@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-community/gogobosh/local"
 	"github.com/cloudfoundry-community/gogobosh/net"
 	"github.com/cloudfoundry-community/gogobosh/utils"
+	"github.com/cloudfoundry-community/gogoboshcf"
 	"github.com/kr/pretty"
 )
 
@@ -58,7 +59,13 @@ func main() {
 		fmt.Printf("Deployment '%s' did not yet successfully deploy\n", deployment.Name)
 		return
 	}
-	fmt.Printf("Manifest: %# v\n", pretty.Formatter(*manifest))
+	// fmt.Printf("Manifest: %# v\n", pretty.Formatter(*manifest))
 
-	// cfManifest := (*manifest).(gogoboshcf.CFDeploymentManifest)
+	cfManifest := gogoboshcf.CFDeploymentManifest(*manifest)
+	pm, err := cfManifest.GlobalProperties()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("%# v\n", pretty.Formatter(pm))
 }

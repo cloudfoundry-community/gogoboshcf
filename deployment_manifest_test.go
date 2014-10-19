@@ -13,17 +13,18 @@ var _ = Describe("CFDeploymentManifest", func() {
 				"nats": map[string]interface{}{
 					"machines": []string{"server1", "server2"},
 					"port":     4444,
-					"username": "nats",
+					"user":     "nats",
 					"password": "password",
 				},
 				"another": "FIXME",
 			},
 		}
-		nats := manifest.NATS()
-		Expect(nats.MachinesHostnames).To(Equal([]string{"server1", "server2"}))
-		Expect(nats.Port).To(Equal(4444))
-		Expect(nats.Username).To(Equal("nats"))
-		Expect(nats.Password).To(Equal("password"))
+		gp, err := manifest.GlobalProperties()
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(gp.NATS.MachinesHostnames).To(Equal([]string{"server1", "server2"}))
+		Expect(gp.NATS.Port).To(Equal(4444))
+		Expect(gp.NATS.Username).To(Equal("nats"))
+		Expect(gp.NATS.Password).To(Equal("password"))
 	})
 
 	It("UAA in global properties", func() {
@@ -37,10 +38,10 @@ var _ = Describe("CFDeploymentManifest", func() {
 				},
 			},
 		}
-		uaa := manifest.UAA()
-		Expect(uaa.AdminClientSecret).To(Equal("admin-secret"))
-		Expect(uaa.AdminClientID).To(Equal("admin"))
-		Expect(uaa.URI).To(Equal("https://uaa.10.244.0.34.xip.io"))
+		gp, err := manifest.GlobalProperties()
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(gp.UAA.Admin.ClientSecret).To(Equal("admin-secret"))
+		Expect(gp.UAA.URI).To(Equal("https://uaa.10.244.0.34.xip.io"))
 	})
 
 	It("CloudController in global properties", func() {
@@ -48,7 +49,6 @@ var _ = Describe("CFDeploymentManifest", func() {
 			Properties: &map[string]interface{}{
 				"domain":        "10.244.0.34.xip.io",
 				"system_domain": "10.244.0.34.xip.io",
-				"api_domain":    "api.10.244.0.34.xip.io",
 				"app_domains":   []string{"10.244.0.34.xip.io"},
 				"acceptance_tests": map[string]interface{}{
 					"admin_user":     "user",
@@ -57,14 +57,12 @@ var _ = Describe("CFDeploymentManifest", func() {
 				"ssl": map[string]interface{}{"skip_cert_verify": true},
 			},
 		}
-		cc := manifest.CloudController()
-		Expect(cc.RootDomain).To(Equal("10.244.0.34.xip.io"))
-		Expect(cc.SystemDomain).To(Equal("10.244.0.34.xip.io"))
-		Expect(cc.AppDomains).To(Equal([]string{"10.244.0.34.xip.io"}))
-		Expect(cc.APIDomain).To(Equal("api.10.244.0.34.xip.io"))
-		Expect(cc.AdminUser).To(Equal("user"))
-		Expect(cc.AdminPassword).To(Equal("password"))
+		gp, err := manifest.GlobalProperties()
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(gp.RootDomain).To(Equal("10.244.0.34.xip.io"))
+		Expect(gp.SystemDomain).To(Equal("10.244.0.34.xip.io"))
+		Expect(gp.AppDomains).To(Equal([]string{"10.244.0.34.xip.io"}))
 
-		Expect(cc.SSLSkipCertVerify).To(Equal(true))
+		Expect(gp.SSL.SkipCertificateVerify).To(Equal(true))
 	})
 })

@@ -1,126 +1,55 @@
 package gogoboshcf
 
-import "github.com/cloudfoundry-community/gogobosh/models"
+import (
+	"github.com/cloudfoundry-community/gogobosh/models"
+	"launchpad.net/goyaml"
+)
 
 // CFDeploymentManifest is a deployment manifest for a Cloud Foundry deployment
 type CFDeploymentManifest models.DeploymentManifest
 
+// PropertiesManifest represents the "properties" section of CFDeploymentManifest
+type PropertiesManifest struct {
+	NATS             NATS
+	UAA              UAA
+	RootDomain       string   `yaml:"domain"`
+	SystemDomain     string   `yaml:"system_domain"`
+	AppDomains       []string `yaml:"app_domains"`
+	SSL              ssl
+	SyslogAggregator map[string]interface{} `yaml:"syslog_aggregator"`
+}
+
 // NATS represents the NATS client credentials
 type NATS struct {
-	MachinesHostnames []string
+	MachinesHostnames []string `yaml:"machines"`
 	Port              int
-	Username          string
+	Username          string `yaml:"user"`
 	Password          string
 }
 
 // UAA represents UAA admin client credentials
 type UAA struct {
-	URI               string
-	AdminClientID     string
-	AdminClientSecret string
+	URI   string `yaml:"url"`
+	Admin clientIDSecret
 }
 
-// CloudController represents the CC domains, admin client credentials
-type CloudController struct {
-	RootDomain        string
-	SystemDomain      string
-	AppDomains        []string
-	APIDomain         string
-	AdminUser         string
-	AdminPassword     string
-	SSLSkipCertVerify bool
+type clientIDSecret struct {
+	ClientID     string `yaml:"client_id"`
+	ClientSecret string `yaml:"client_secret"`
 }
 
-// NATS discovers the hostnames/static IPs for the NATS servers
-func (manifest *CFDeploymentManifest) NATS() (nats NATS) {
-	if manifest.Properties == nil {
-		return
-	}
-	properties := *manifest.Properties
-	if properties["nats"] == nil {
-		return
-	}
-	natsProperties := properties["nats"].(map[string]interface{})
-
-	if natsProperties["machines"] != nil {
-		nats.MachinesHostnames = natsProperties["machines"].([]string)
-	}
-	if natsProperties["machines"] != nil {
-		nats.Port = natsProperties["port"].(int)
-	} else {
-		nats.Port = 4222
-	}
-	if natsProperties["username"] != nil {
-		nats.Username = natsProperties["username"].(string)
-	}
-	if natsProperties["password"] != nil {
-		nats.Password = natsProperties["password"].(string)
-	}
-
-	return
+type ssl struct {
+	SkipCertificateVerify bool `yaml:"skip_cert_verify"`
 }
 
-// UAA discovers the admin client credentials for the UAA
-func (manifest *CFDeploymentManifest) UAA() (uaa UAA) {
-	if manifest.Properties == nil {
+// GlobalProperties returns the properties
+// TODO: marshal Properties to YAML; then unmarshal to a CF struct
+func (manifest *CFDeploymentManifest) GlobalProperties() (pm *PropertiesManifest, err error) {
+	yaml, err := goyaml.Marshal(manifest.Properties)
+	if err != nil {
 		return
 	}
-	properties := *manifest.Properties
-	if properties["uaa"] == nil {
-		return
-	}
-	uaaProperties := properties["uaa"].(map[string]interface{})
-
-	if uaaProperties["admin"] != nil {
-		admin := uaaProperties["admin"].(map[string]interface{})
-		if admin["client_secret"] != nil {
-			uaa.AdminClientSecret = admin["client_secret"].(string)
-		}
-		if admin["client_id"] != nil {
-			uaa.AdminClientID = admin["client_id"].(string)
-		} else {
-			uaa.AdminClientID = "admin"
-		}
-	}
-	if uaaProperties["url"] != nil {
-		uaa.URI = uaaProperties["url"].(string)
-	}
-
-	return
-}
-
-// CloudController discovers the client credentials & domains for the Cloud Controller
-func (manifest *CFDeploymentManifest) CloudController() (cc CloudController) {
-	if manifest.Properties == nil {
-		return
-	}
-	properties := *manifest.Properties
-	if properties["domain"] != nil {
-		cc.RootDomain = properties["domain"].(string)
-	}
-	if properties["system_domain"] != nil {
-		cc.SystemDomain = properties["system_domain"].(string)
-	}
-	if properties["api_domain"] != nil {
-		cc.APIDomain = properties["api_domain"].(string)
-	}
-	if properties["app_domains"] != nil {
-		cc.AppDomains = properties["app_domains"].([]string)
-	}
-
-	if properties["acceptance_tests"] != nil {
-		acceptanceTests := properties["acceptance_tests"].(map[string]interface{})
-		if acceptanceTests["admin_user"] != nil {
-			cc.AdminUser = acceptanceTests["admin_user"].(string)
-			cc.AdminPassword = acceptanceTests["admin_password"].(string)
-		}
-	}
-
-	if properties["ssl"] != nil {
-		ssl := properties["ssl"].(map[string]interface{})
-		if ssl["skip_cert_verify"] != nil {
-			cc.SSLSkipCertVerify = ssl["skip_cert_verify"].(bool)
-		}
-	}
+	pm = &PropertiesManifest{}
+	goyaml.Unmarshal([]byte(yaml), pm)
 	return
 }
