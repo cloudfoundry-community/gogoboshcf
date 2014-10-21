@@ -1,6 +1,8 @@
 package gogoboshcf
 
 import (
+	"strings"
+
 	"github.com/cloudfoundry-community/gogobosh/models"
 	"launchpad.net/goyaml"
 )
@@ -19,6 +21,11 @@ type PropertiesManifest struct {
 	SyslogAggregator map[string]interface{} `yaml:"syslog_aggregator"`
 }
 
+// SSL describes if components should skip SSL certificate verification (due to self-signed certs)
+type SSL struct {
+	SkipCertificateVerify bool `yaml:"skip_cert_verify"`
+}
+
 // NATS represents the NATS client credentials
 type NATS struct {
 	MachinesHostnames []string `yaml:"machines"`
@@ -29,8 +36,10 @@ type NATS struct {
 
 // UAA represents UAA admin client credentials
 type UAA struct {
-	URI   string `yaml:"url"`
-	Admin ClientIDSecret
+	URI       string `yaml:"url"`
+	Admin     ClientIDSecret
+	Scim      Scim
+	ScimUsers []ScimUser
 }
 
 // ClientIDSecret describes an ID/Secret pair
@@ -39,9 +48,16 @@ type ClientIDSecret struct {
 	ClientSecret string `yaml:"client_secret"`
 }
 
-// SSL describes if components should skip SSL certificate verification (due to self-signed certs)
-type SSL struct {
-	SkipCertificateVerify bool `yaml:"skip_cert_verify"`
+// Scim lists the built-in UAA users
+type Scim struct {
+	Users []string
+}
+
+// ScimUser summarizes nicely the built-in UAA users
+type ScimUser struct {
+	Username string
+	Password string
+	Scopes   []string
 }
 
 // GlobalProperties returns the properties
@@ -53,5 +69,18 @@ func (manifest *CFDeploymentManifest) GlobalProperties() (pm *PropertiesManifest
 	}
 	pm = &PropertiesManifest{}
 	goyaml.Unmarshal([]byte(yaml), pm)
+	pm.setupScimUsers()
 	return
+}
+
+func (pm *PropertiesManifest) setupScimUsers() {
+	for _, userString := range pm.UAA.Scim.Users {
+		tokens := strings.Split(userString, "|")
+		scimUser := ScimUser{
+			Username: tokens[0],
+			Password: tokens[1],
+			Scopes:   strings.Split(tokens[2], ","),
+		}
+		pm.UAA.ScimUsers = append(pm.UAA.ScimUsers, scimUser)
+	}
 }

@@ -35,6 +35,9 @@ var _ = Describe("CFDeploymentManifest", func() {
 						"client_secret": "admin-secret",
 					},
 					"url": "https://uaa.10.244.0.34.xip.io",
+					"scim": map[string]interface{}{
+						"users": []string{"admin|password|scim.write,scim.read,openid,cloud_controller.admin,clients.read,clients.write,doppler.firehose"},
+					},
 				},
 			},
 		}
@@ -42,6 +45,11 @@ var _ = Describe("CFDeploymentManifest", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(gp.UAA.Admin.ClientSecret).To(Equal("admin-secret"))
 		Expect(gp.UAA.URI).To(Equal("https://uaa.10.244.0.34.xip.io"))
+		Expect(gp.UAA.Scim.Users).To(Equal([]string{"admin|password|scim.write,scim.read,openid,cloud_controller.admin,clients.read,clients.write,doppler.firehose"}))
+		Expect(len(gp.UAA.ScimUsers)).To(Equal(1))
+		Expect(gp.UAA.ScimUsers[0].Username).To(Equal("admin"))
+		Expect(gp.UAA.ScimUsers[0].Password).To(Equal("password"))
+		Expect(gp.UAA.ScimUsers[0].Scopes).To(Equal([]string{"scim.write", "scim.read", "openid", "cloud_controller.admin", "clients.read", "clients.write", "doppler.firehose"}))
 	})
 
 	It("CloudController in global properties", func() {
