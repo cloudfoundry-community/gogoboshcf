@@ -3,7 +3,7 @@
 The `gogobosh` golang package is a client library for a BOSH director. This `gogoboshcf` package enhances `gogobosh` for Cloud Foundry specific deployments.
 
 * Godocs https://godoc.org/github.com/cloudfoundry-community/gogoboshcf
-* Test status ![ci](https://travis-ci.org/cloudfoundry-community/gogoboshcf.svg?branch=master)
+* Test status [![Build Status](https://travis-ci.org/cloudfoundry-community/gogoboshcf.svg?branch=master)](https://travis-ci.org/cloudfoundry-community/gogoboshcf)
 
 ## Examples
 
